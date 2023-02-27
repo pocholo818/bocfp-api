@@ -3,7 +3,9 @@ const app = express();
 const cors = require("cors");
 var moment = require('moment');
 const jwt = require('jsonwebtoken')
-require("dotenv").config();
+
+const path = require('path'); 
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const port = 6000;
 app.use(cors())
