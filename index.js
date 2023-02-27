@@ -86,8 +86,10 @@ app.post('/user/login', (req, res) => {
   const { username, password } = req.body
 
   connection.query(`SELECT * FROM user WHERE username='${username}' AND password='${password}' AND soft_delete = 0`, (err, rows, fields) => {
+    console.log(rows)
     if (!rows[0]) {
-      res.sendStatus(401).json({ "message": "Incorrect Username or Password" })
+      console.log('test')
+      return res.status(401).json({ "message": "Incorrect Username or Password" })
     }
     else if (rows[0].username == username && rows[0].password == password) {
 
