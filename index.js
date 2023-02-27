@@ -3,20 +3,21 @@ const app = express();
 const cors = require("cors");
 var moment = require('moment');
 const jwt = require('jsonwebtoken')
-
-const path = require('path'); 
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require("dotenv").config();
 
 const port = 6000;
 app.use(cors())
 app.use(express.json({ limit: '50mb' }));
 
+const ACCESS_TOKEN_SECRET = 'cdbd59409f55e364b9e993dc65ca6148efc8d7b433366ab69474cce37daf40221218ad23464ee283da6df07a79930d67f0ed88951e1c22529686ea73817dd32c'
+const REFRESH_TOKEN_SECRET = 'c89d5f45bc3e8cc0fa59986fdd47fb1b19388d2dbed809c72d56b70dc5bdfd15098386b018172123de635ae0602e4cc58098d2bc5bcad336f7c49d5a5f627d3a'
+
 const mysql = require('mysql');
 const connection = mysql.createConnection({
   host: 'auth-db946.hstgr.io',
-  user:  process.env.USER,
-  password: process.env.PASSWORD,
-  database: process.env.DBASE
+  user:  'u621496327_bocfp',
+  password: 'Bocfp2022$',
+  database: 'u621496327_bocfp'
 })
 
 function authenticateToken(admin_power) {
@@ -25,7 +26,7 @@ function authenticateToken(admin_power) {
     const token = authHeader && authHeader.split(' ')[1]
     if (token == null) return res.sendStatus(401)
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, userInfo) => {
+    jwt.verify(token, ACCESS_TOKEN_SECRET, (err, userInfo) => {
       if (err) return res.sendStatus(403)
 
       // wip
@@ -40,7 +41,7 @@ function authenticateToken(admin_power) {
 }
 
 function generateAccessToken(userInfo) {
-  return accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
+  return accessToken = jwt.sign(userInfo, ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
 }
 
 // funct
@@ -94,7 +95,7 @@ app.post('/user/login', (req, res) => {
       }
 
       const accessToken = generateAccessToken(userInfo)
-      const refreshToken = jwt.sign(userInfo, process.env.REFRESH_TOKEN_SECRET)
+      const refreshToken = jwt.sign(userInfo, REFRESH_TOKEN_SECRET)
 
       connection.query(`UPDATE user SET refresh_token = '${refreshToken}' WHERE user_id = ${userInfo.id}`, (err, rows, fields) => {
         if (err) throw err
@@ -124,7 +125,7 @@ app.post('/user/refresh', async (req, res) => {
       return res.sendStatus(403)
     }
 
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, userInfo) => {
+    jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err, userInfo) => {
       if (err) return res.sendStatus(403)
       const accessToken = generateAccessToken({ fname: userInfo.fname, role: userInfo.role, id: userInfo.id, admin_power: userInfo.admin_power })
       res.json({ accessToken: accessToken })
