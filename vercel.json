@@ -13,7 +13,12 @@
     "rewrites": [
         { 
             "source": "/(.*)", 
-            "destination": "index.js" 
+            "destination": "index.js"
         }
-    ]
+    ],
+    "functions" : {
+        "index.js": {
+            "runtime": "@vercel/node"
+        }
+    }
   }
