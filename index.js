@@ -23,7 +23,7 @@ const connection = mysql.createConnection({
   // password: '',
   // database: 'bocfp'
 })
-// 
+
 function authenticateToken(admin_power) {
   return (req, res, next) => {
     const authHeader = req.headers['authorization']
