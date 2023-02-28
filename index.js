@@ -5,10 +5,10 @@ var moment = require('moment');
 const jwt = require('jsonwebtoken')
 require("dotenv").config();
 
-const port = 5001;
+const port = 8080;
 app.use(cors())
 app.use(express.json({ limit: '50mb' }));
-// 
+
 const ACCESS_TOKEN_SECRET = 'cdbd59409f55e364b9e993dc65ca6148efc8d7b433366ab69474cce37daf40221218ad23464ee283da6df07a79930d67f0ed88951e1c22529686ea73817dd32c'
 const REFRESH_TOKEN_SECRET = 'c89d5f45bc3e8cc0fa59986fdd47fb1b19388d2dbed809c72d56b70dc5bdfd15098386b018172123de635ae0602e4cc58098d2bc5bcad336f7c49d5a5f627d3a'
 
