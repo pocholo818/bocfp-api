@@ -1,11 +1,14 @@
 const express = require('express');
 const app = express();
 const cors = require("cors");
+const https = require('https');
+const fs = require('fs');
+
 var moment = require('moment');
 const jwt = require('jsonwebtoken')
 require("dotenv").config();
 
-const port = 6000;
+const port = 8080;
 app.use(cors())
 app.use(express.json({ limit: '50mb' }));
 
@@ -1066,10 +1069,16 @@ app.delete('/link/:id', authenticateToken(0), (req, res) => {
 //   res.send("success")
 // });
 
-// 
+//
+
+const httpsServer = https.createServer({
+    key: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/fullchain.pem')
+}, app)
+
 const start = async () => {
   try {
-    app.listen(port, () =>
+    httpsServer.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)
     );
   } catch (error) {
