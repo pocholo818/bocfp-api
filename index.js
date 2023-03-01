@@ -73,8 +73,12 @@ function bmi(height, weight, output) {
 };
 // name format
 function nameFormat(string) {
-  string = string.toLowerCase()
-  return string.charAt(0).toUpperCase() + string.slice(1);
+  function nameFormat(string) {
+    return string
+      .toLowerCase().split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
 }
 
 app.get('/test', (req, res) => {
