@@ -18,7 +18,7 @@ const REFRESH_TOKEN_SECRET = 'c89d5f45bc3e8cc0fa59986fdd47fb1b19388d2dbed809c72d
 const mysql = require('mysql');
 const connection = mysql.createConnection({
   host: 'auth-db946.hstgr.io',
-  user:  'u621496327_bocfp',
+  user: 'u621496327_bocfp',
   password: 'Bocfp2022$',
   database: 'u621496327_bocfp'
   // host: 'localhost',
@@ -73,12 +73,10 @@ function bmi(height, weight, output) {
 };
 // name format
 function nameFormat(string) {
-  function nameFormat(string) {
-    return string
-      .toLowerCase().split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  }
+  return string
+    .toLowerCase().split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 app.get('/test', (req, res) => {
@@ -1076,8 +1074,8 @@ app.delete('/link/:id', authenticateToken(0), (req, res) => {
 //
 
 const httpsServer = https.createServer({
-    key: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/fullchain.pem')
+  key: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/fullchain.pem')
 }, app)
 
 const start = async () => {
