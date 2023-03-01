@@ -580,7 +580,7 @@ app.post('/guardian', authenticateToken(0), (req, res) => {
 
   connection.query(`SELECT guardian_id, household_id FROM guardian WHERE household_id = '${household_id}'`, (err, rows, fields) => {
     if (err) throw err
-    if (rows[0].household_id === household_id) {
+    if (rows[0]) {
       res.status(409).json({ message: "Household ID already been taken" })
     }
     else {
