@@ -601,7 +601,7 @@ app.post('/link/add/:guardian_id', authenticateToken(0), (req, res) => {
 
   connection.query(`SELECT *
     FROM link JOIN child ON link.id = child.id
-    WHERE link.guardian_id = ${id} AND child.soft_delete = 0`, (err, rows, fields) => {
+    WHERE link.id = ${id} AND child.soft_delete = 0`, (err, rows, fields) => {
     if (err) throw err
     else if (rows[0]) {
       res.status(409).json({ "message": "Child already been linked" })
