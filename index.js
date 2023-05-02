@@ -8,7 +8,7 @@ var moment = require('moment');
 const jwt = require('jsonwebtoken')
 require("dotenv").config();
 
-const port = 8080;
+const port = 5000;
 app.use(cors())
 app.use(express.json({ limit: '50mb' }));
 
@@ -17,14 +17,14 @@ const REFRESH_TOKEN_SECRET = 'c89d5f45bc3e8cc0fa59986fdd47fb1b19388d2dbed809c72d
 
 const mysql = require('mysql');
 const connection = mysql.createConnection({
-  host: 'auth-db946.hstgr.io',
-  user: 'u621496327_bocfp',
-  password: 'Bocfp2022$',
-  database: 'u621496327_bocfp'
-  // host: 'localhost',
-  // user:  'root',
-  // password: '',
-  // database: 'bocfp'
+  // host: 'auth-db946.hstgr.io',
+  // user: 'u621496327_bocfp',
+  // password: 'Bocfp2022$',
+  // database: 'u621496327_bocfp'
+  host: 'localhost',
+  user:  'root',
+  password: '',
+  database: 'bocfp'
 })
 
 function authenticateToken(admin_power) {
@@ -1073,14 +1073,17 @@ app.delete('/link/:id', authenticateToken(0), (req, res) => {
 
 //
 
-const httpsServer = https.createServer({
-  key: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/fullchain.pem')
-}, app)
+// const httpsServer = https.createServer({
+//   key: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/privkey.pem'),
+//   cert: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/fullchain.pem')
+// }, app)
 
 const start = async () => {
   try {
-    httpsServer.listen(port, () =>
+    // httpsServer.listen(port, () =>
+    //   console.log(`Server is listening on port ${port}...`)
+    // );
+    app.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)
     );
   } catch (error) {
