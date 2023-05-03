@@ -93,7 +93,6 @@ app.post('/user/login', (req, res) => {
   connection.query(`SELECT * FROM user WHERE username='${username}' AND password='${password}' AND soft_delete = 0`, (err, rows, fields) => {
     console.log(rows)
     if (!rows[0]) {
-      console.log('test')
       return res.status(401).json({ "message": "Incorrect Username or Password" })
     }
     else if (rows[0].username == username && rows[0].password == password) {
@@ -424,7 +423,7 @@ app.get('/link/:id', authenticateToken(0), (req, res) => {
 
   // get linked child to guardian
   if (type === 'child') {
-    query = `SELECT guardian.fname, guardian.lname, guardian.address, 
+    query = `SELECT guardian.fname, guardian.lname, guardian.address, guardian.purok, 
       guardian.contact, link.relationship, guardian.guardian_id
       FROM link JOIN guardian ON link.guardian_id = guardian.guardian_id
       WHERE link.id = ${id} AND guardian.soft_delete = 0`
@@ -698,7 +697,7 @@ app.put('/record/:id', authenticateToken(0), (req, res) => {
 // update guardian
 app.put('/guardUpdate/:id', authenticateToken(0), (req, res) => {
   let { fname, lname } = req.body
-  const { contact, address, household_id } = req.body;
+  const { contact, address, household_id, purok } = req.body;
   const { id } = req.params
 
   fname = nameFormat(fname)
@@ -711,7 +710,7 @@ app.put('/guardUpdate/:id', authenticateToken(0), (req, res) => {
     }
     else {
       connection.query(`UPDATE guardian SET fname = '${fname}', lname = '${lname}',
-        contact = '${contact}', address = '${address}', household_id = '${household_id}'
+        contact = '${contact}', address = '${address}', household_id = '${household_id}', purok = '${purok}'
         WHERE guardian_id=${id}`, (err, rows, fields) => {
         if (err) throw err
       })
@@ -910,7 +909,12 @@ app.get('/child/remarks', (req, res) => {
     "Underweight": 0,
     "Normal": 0,
     "Overweight": 0,
-    "Obese": 0
+    "Obese": 0,
+    "Underweight_Percentage": 0,
+    "Normal_Percentage": 0,
+    "Overweight_Percentage": 0,
+    "Obese_Percentage": 0,
+    "total": 0
   }
 
   connection.query(`SELECT
@@ -921,7 +925,16 @@ app.get('/child/remarks', (req, res) => {
     INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
     WHERE child.soft_delete = 0 GROUP BY child.id`, (err, rows, fields) => {
     if (rows) {
-      rows.forEach(item => results[item.remark] += 1)
+      rows.forEach(item => { 
+        results[item.remark] += 1
+        results["total"]++
+      })
+
+      results["Underweight_Percentage"] = (results["Underweight"]/results["total"])*100
+      results["Normal_Percentage"] = (results["Normal"]/results["total"])*100
+      results["Overweight_Percentage"] = (results["Overweight"]/results["total"])*100
+      results["Obese_Percentage"] = (results["Obese"]/results["total"])*100
+
       res.json(results)
     }
     else {
