@@ -2,10 +2,10 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Feb 26, 2023 at 11:07 AM
--- Server version: 10.4.25-MariaDB
--- PHP Version: 8.1.10
+-- Host: localhost
+-- Generation Time: May 03, 2023 at 07:18 AM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.0.25
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -34,7 +34,7 @@ CREATE TABLE `announcement` (
   `user_id` int(11) NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   `soft_delete` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -50,7 +50,7 @@ CREATE TABLE `child` (
   `sex` varchar(6) NOT NULL,
   `soft_delete` tinyint(1) NOT NULL,
   `image` mediumtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `child`
@@ -58,7 +58,7 @@ CREATE TABLE `child` (
 
 INSERT INTO `child` (`id`, `fname`, `lname`, `bdate`, `sex`, `soft_delete`, `image`) VALUES
 (1, 'Christian', 'Cayabyab', '2014-08-09', 'M', 0, ''),
-(2, 'Francin kate', 'Hallarde', '2015-10-17', 'F', 0, ''),
+(2, 'Francin Kate', 'Hallarde', '2015-10-17', 'F', 0, ''),
 (3, 'Mark aaron', 'Acupiado', '2012-01-11', 'M', 0, '');
 
 -- --------------------------------------------------------
@@ -74,17 +74,18 @@ CREATE TABLE `guardian` (
   `contact` varchar(11) NOT NULL,
   `household_id` varchar(7) NOT NULL,
   `address` varchar(128) NOT NULL,
+  `Purok` int(3) NOT NULL,
   `soft_delete` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `guardian`
 --
 
-INSERT INTO `guardian` (`guardian_id`, `fname`, `lname`, `contact`, `household_id`, `address`, `soft_delete`) VALUES
-(1, 'Tina', 'Velasco', '0', 'P11086', 'none', 0),
-(2, 'Joanne', 'Lara', '0', 'P6', 'none', 0),
-(3, 'Rachell', 'Acupiado', '0', 'P12', 'none', 0);
+INSERT INTO `guardian` (`guardian_id`, `fname`, `lname`, `contact`, `household_id`, `address`, `Purok`, `soft_delete`) VALUES
+(1, 'Tina', 'Velasco', '09649656465', 'P1108Q5', 'National Highway Purok 7', 7, 0),
+(2, 'Joanne', 'Lara', '09462164651', 'P696S25', '2071 Apitong St. Purok 10', 10, 0),
+(3, 'Rachell', 'Acupiado', '09321654651', 'P12C955', '2049 Bataan Road Purok 9', 9, 0);
 
 -- --------------------------------------------------------
 
@@ -97,7 +98,7 @@ CREATE TABLE `link` (
   `id` varchar(11) NOT NULL,
   `relationship` varchar(15) NOT NULL,
   `guardian_id` varchar(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `link`
@@ -117,14 +118,14 @@ INSERT INTO `link` (`link_id`, `id`, `relationship`, `guardian_id`) VALUES
 CREATE TABLE `record` (
   `record_id` int(11) NOT NULL,
   `id` int(11) NOT NULL,
-  `height` int(11) NOT NULL,
-  `weight` int(11) NOT NULL,
+  `height` double NOT NULL,
+  `weight` double NOT NULL,
   `remark` varchar(15) NOT NULL,
   `output` double NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   `soft_delete` tinyint(1) NOT NULL,
   `user_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -142,14 +143,14 @@ CREATE TABLE `user` (
   `admin_power` tinyint(1) NOT NULL,
   `soft_delete` tinyint(1) NOT NULL,
   `refresh_token` varchar(256) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user`
 --
 
 INSERT INTO `user` (`user_id`, `fname`, `lname`, `username`, `password`, `contact`, `admin_power`, `soft_delete`, `refresh_token`) VALUES
-(1, 'Jenny', 'De leon', 'admin', '0d3c456672f7646f6403659b91c8987e95ecc7012fd7f77cfa400ce6dd33c789', '09999999999', 1, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ikplbm55IiwiYWRtaW5fcG93ZXIiOjEsImlkIjoxLCJpYXQiOjE2NzcyMzc0MjF9.xSD2XGgzdKx0UlWU_zNBHuKUjseCGXghbm4xqanPk1E');
+(1, 'Jenny', 'De Leon', 'admin', '0d3c456672f7646f6403659b91c8987e95ecc7012fd7f77cfa400ce6dd33c789', '09999999999', 1, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ikplbm55IiwiYWRtaW5fcG93ZXIiOjEsImlkIjoxLCJpYXQiOjE2ODMwOTAyODV9.BzZGoWKk8GRk7zXZsh4fNXHn2rJk9zUk5f1DYmlsyj0');
 
 --
 -- Indexes for dumped tables
