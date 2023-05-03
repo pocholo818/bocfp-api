@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: May 03, 2023 at 07:18 AM
+-- Generation Time: May 03, 2023 at 11:32 AM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.0.25
 
@@ -59,7 +59,7 @@ CREATE TABLE `child` (
 INSERT INTO `child` (`id`, `fname`, `lname`, `bdate`, `sex`, `soft_delete`, `image`) VALUES
 (1, 'Christian', 'Cayabyab', '2014-08-09', 'M', 0, ''),
 (2, 'Francin Kate', 'Hallarde', '2015-10-17', 'F', 0, ''),
-(3, 'Mark aaron', 'Acupiado', '2012-01-11', 'M', 0, '');
+(3, 'Mark Aaron', 'Acupiado', '2012-01-11', 'M', 0, '');
 
 -- --------------------------------------------------------
 
@@ -74,7 +74,7 @@ CREATE TABLE `guardian` (
   `contact` varchar(11) NOT NULL,
   `household_id` varchar(7) NOT NULL,
   `address` varchar(128) NOT NULL,
-  `Purok` int(3) NOT NULL,
+  `purok` int(3) NOT NULL,
   `soft_delete` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -82,10 +82,10 @@ CREATE TABLE `guardian` (
 -- Dumping data for table `guardian`
 --
 
-INSERT INTO `guardian` (`guardian_id`, `fname`, `lname`, `contact`, `household_id`, `address`, `Purok`, `soft_delete`) VALUES
+INSERT INTO `guardian` (`guardian_id`, `fname`, `lname`, `contact`, `household_id`, `address`, `purok`, `soft_delete`) VALUES
 (1, 'Tina', 'Velasco', '09649656465', 'P1108Q5', 'National Highway Purok 7', 7, 0),
 (2, 'Joanne', 'Lara', '09462164651', 'P696S25', '2071 Apitong St. Purok 10', 10, 0),
-(3, 'Rachell', 'Acupiado', '09321654651', 'P12C955', '2049 Bataan Road Purok 9', 9, 0);
+(3, 'Rachell', 'Acupiado', '09321654651', 'P12C955', '2049 Bataan Road', 10, 0);
 
 -- --------------------------------------------------------
 
@@ -123,9 +123,18 @@ CREATE TABLE `record` (
   `remark` varchar(15) NOT NULL,
   `output` double NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
-  `soft_delete` tinyint(1) NOT NULL,
+  `soft_delete` tinyint(1) NOT NULL DEFAULT 0,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `record`
+--
+
+INSERT INTO `record` (`record_id`, `id`, `height`, `weight`, `remark`, `output`, `date`, `soft_delete`, `user_id`) VALUES
+(1, 3, 135.1, 29.4, 'Underweight', 16.107814974898655, '2023-05-03 08:21:51', 0, 1),
+(2, 1, 129.3, 35.5, 'Normal', 21.233975077892797, '2023-05-03 08:23:19', 0, 1),
+(3, 2, 120.9, 39.3, 'Overweight', 26.886851508639708, '2023-05-03 09:28:21', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -150,7 +159,7 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`user_id`, `fname`, `lname`, `username`, `password`, `contact`, `admin_power`, `soft_delete`, `refresh_token`) VALUES
-(1, 'Jenny', 'De Leon', 'admin', '0d3c456672f7646f6403659b91c8987e95ecc7012fd7f77cfa400ce6dd33c789', '09999999999', 1, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ikplbm55IiwiYWRtaW5fcG93ZXIiOjEsImlkIjoxLCJpYXQiOjE2ODMwOTAyODV9.BzZGoWKk8GRk7zXZsh4fNXHn2rJk9zUk5f1DYmlsyj0');
+(1, 'Jenny', 'De Leon', 'admin', '0d3c456672f7646f6403659b91c8987e95ecc7012fd7f77cfa400ce6dd33c789', '09999999999', 1, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ikplbm55IiwiYWRtaW5fcG93ZXIiOjEsImlkIjoxLCJpYXQiOjE2ODMxMDU1MjF9.DjwxCaOEBI5VUhDyoAtoZZjHA3ZOeIKDBvxo5NPS3YQ');
 
 --
 -- Indexes for dumped tables
@@ -225,7 +234,7 @@ ALTER TABLE `link`
 -- AUTO_INCREMENT for table `record`
 --
 ALTER TABLE `record`
-  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `user`
