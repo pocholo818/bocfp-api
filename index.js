@@ -930,10 +930,10 @@ app.get('/child/remarks', (req, res) => {
         results["total"]++
       })
 
-      results["Underweight_Percentage"] = (results["Underweight"]/results["total"])*100
-      results["Normal_Percentage"] = (results["Normal"]/results["total"])*100
-      results["Overweight_Percentage"] = (results["Overweight"]/results["total"])*100
-      results["Obese_Percentage"] = (results["Obese"]/results["total"])*100
+      results["Underweight_Percentage"] = ((results["Underweight"]/results["total"])*100).toFixed(2);
+      results["Normal_Percentage"] = ((results["Normal"]/results["total"])*100).toFixed(2)
+      results["Overweight_Percentage"] = ((results["Overweight"]/results["total"])*100).toFixed(2)
+      results["Obese_Percentage"] = ((results["Obese"]/results["total"])*100).toFixed(2)
 
       res.json(results)
     }
