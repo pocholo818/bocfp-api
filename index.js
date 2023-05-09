@@ -942,6 +942,42 @@ app.get('/child/remarks', (req, res) => {
     }
   })
 });
+
+// get all age
+app.get('/child/age', (req, res) => {
+  let results = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0,
+    9: 0,
+    10: 0,
+    11: 0,
+    12: 0,
+    "total": 0
+  }
+
+  connection.query(`SELECT DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), bdate)), '%Y') + 0 AS age
+    FROM child WHERE soft_delete = 0`, (err, rows, fields) => {
+    if (rows) {
+      rows.forEach(item => { 
+        results[item.age] += 1
+        results["total"]++
+      })
+
+      res.json(results)
+    }
+    else {
+      res.json({ "message": "No result(s)" })
+    }
+  })
+});
+
+// excel
 app.get('/child/data', async (req, res) => {
   const writeXlsxFile = require('write-excel-file/node')
 
@@ -956,7 +992,7 @@ app.get('/child/data', async (req, res) => {
 
   connection.query(`SELECT
     child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,
+    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,  
     link.relationship
     FROM child 
     LEFT OUTER JOIN link ON link.id = child.id 
