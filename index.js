@@ -1010,8 +1010,7 @@ app.get('/child/data', async (req, res) => {
         { value: 'Remark', fontWeight: 'bold' },
         { value: 'Output', fontWeight: 'bold' },
         { value: 'Date', fontWeight: 'bold' },
-        { value: 'User First Name', fontWeight: 'bold' },
-        { value: 'User Last Name', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
       ]
 
       let DATA_ROWS = []
@@ -1028,8 +1027,7 @@ app.get('/child/data', async (req, res) => {
           { type: String, value: row.remark },
           { type: Number, value: Number(row.output.toFixed(2)) },
           { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
-          { type: String, value: row.user_fname },
-          { type: String, value: row.user_lname },
+          { type: String, value: `${row.user_fname} ${row.user_lname}`  }
         ])
       })
 
