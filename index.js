@@ -956,7 +956,7 @@ app.get('/child/data', async (req, res) => {
 
   connection.query(`SELECT
     child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id,
+    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,
     link.relationship
     FROM child 
     LEFT OUTER JOIN link ON link.id = child.id 
@@ -970,7 +970,8 @@ app.get('/child/data', async (req, res) => {
         { value: 'Guardian First Name', fontWeight: 'bold' },
         { value: 'Guardian Last Name', fontWeight: 'bold' },
         { value: 'Guardian Household ID', fontWeight: 'bold' },
-        { value: 'Relationship', fontWeight: 'bold' }
+        { value: 'Relationship', fontWeight: 'bold' },
+        { value: 'Purok', fontWeight: 'bold' }
       ]
 
       let DATA_ROWS = []
@@ -983,7 +984,8 @@ app.get('/child/data', async (req, res) => {
           { type: String, value: row.guard_fname },
           { type: String, value: row.guard_lname },
           { type: String, value: row.household_id },
-          { type: String, value: row.relationship }
+          { type: String, value: row.relationship },
+          { type: Number, value: row.purok}
         ])
       })
 
