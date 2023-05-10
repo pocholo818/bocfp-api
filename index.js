@@ -91,7 +91,7 @@ app.post('/user/login', (req, res) => {
   const { username, password } = req.body
 
   connection.query(`SELECT * FROM user WHERE username='${username}' AND password='${password}' AND soft_delete = 0`, (err, rows, fields) => {
-    console.log(rows)
+    // console.log(rows)
     if (!rows[0]) {
       return res.status(401).json({ "message": "Incorrect Username or Password" })
     }
@@ -165,6 +165,14 @@ app.get('/childs', authenticateToken(0), (req, res) => {
     query = `SELECT *, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), bdate)), '%Y') + 0 AS age 
     FROM child WHERE soft_delete = 0 ORDER BY age ASC LIMIT ${limit} OFFSET ${offset}`
   }
+  else if (filter === 'purok') {
+    query = `SELECT child.fname, child.lname, guardian.purok, child.id, child.image, child.soft_delete
+    FROM link 
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    JOIN child ON link.id = child.id
+    WHERE guardian.soft_delete = 0
+    ORDER BY purok LIMIT ${limit} OFFSET ${offset}`
+  }
   else if (filter === 'deleted') {
     query = `SELECT * FROM child WHERE soft_delete = 1 ORDER BY lname ASC LIMIT ${limit} OFFSET ${offset}`
   }
@@ -224,6 +232,14 @@ app.get('/childs', authenticateToken(0), (req, res) => {
       query = `SELECT * FROM
         (SELECT *, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), bdate)), '%Y') + 0 AS age 
         FROM child WHERE soft_delete = 0) AS result WHERE age = "${search}" ORDER BY age LIMIT ${limit} OFFSET ${offset}`
+    }
+    else if (filter === 'purok') {
+      query = `SELECT child.fname, child.lname, guardian.purok, child.id, child.image
+      FROM link 
+      JOIN guardian ON link.guardian_id = guardian.guardian_id
+      JOIN child ON link.id = child.id
+      WHERE guardian.purok = "${search}" AND guardian.soft_delete = 0
+      ORDER BY purok LIMIT ${limit} OFFSET ${offset}`
     }
     else if (filter === 'deleted') {
       query = `SELECT * FROM child WHERE 
