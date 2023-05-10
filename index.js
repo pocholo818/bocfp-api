@@ -993,6 +993,43 @@ app.get('/child/age', (req, res) => {
   })
 });
 
+// get all purok
+app.get('/child/purok', (req, res) => {
+  let results = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0,
+    9: 0,
+    10: 0,
+    11: 0,
+    12: 0,
+    "total": 0
+  }
+
+  connection.query(`SELECT guardian.purok
+    FROM link 
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    JOIN child ON link.id = child.id
+    WHERE guardian.soft_delete = 0`, (err, rows, fields) => {
+    if (rows) {
+      rows.forEach(item => { 
+        results[item.purok] += 1
+        results["total"]++
+      })
+
+      res.json(results)
+    }
+    else {
+      res.json({ "message": "No result(s)" })
+    }
+  })
+});
+
 // excel
 app.get('/child/data', async (req, res) => {
   const writeXlsxFile = require('write-excel-file/node')
