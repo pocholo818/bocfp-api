@@ -22,7 +22,7 @@ const connection = mysql.createConnection({
   // password: 'Bocfp2022$',
   // database: 'u621496327_bocfp'
   host: 'localhost',
-  user:  'root',
+  user: 'root',
   password: '',
   database: 'bocfp'
 })
@@ -941,15 +941,15 @@ app.get('/child/remarks', (req, res) => {
     INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
     WHERE child.soft_delete = 0 GROUP BY child.id`, (err, rows, fields) => {
     if (rows) {
-      rows.forEach(item => { 
+      rows.forEach(item => {
         results[item.remark] += 1
         results["total"]++
       })
 
-      results["Underweight_Percentage"] = ((results["Underweight"]/results["total"])*100).toFixed(2);
-      results["Normal_Percentage"] = ((results["Normal"]/results["total"])*100).toFixed(2)
-      results["Overweight_Percentage"] = ((results["Overweight"]/results["total"])*100).toFixed(2)
-      results["Obese_Percentage"] = ((results["Obese"]/results["total"])*100).toFixed(2)
+      results["Underweight_Percentage"] = ((results["Underweight"] / results["total"]) * 100).toFixed(2);
+      results["Normal_Percentage"] = ((results["Normal"] / results["total"]) * 100).toFixed(2)
+      results["Overweight_Percentage"] = ((results["Overweight"] / results["total"]) * 100).toFixed(2)
+      results["Obese_Percentage"] = ((results["Obese"] / results["total"]) * 100).toFixed(2)
 
       res.json(results)
     }
@@ -980,7 +980,7 @@ app.get('/child/age', (req, res) => {
   connection.query(`SELECT DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), bdate)), '%Y') + 0 AS age
     FROM child WHERE soft_delete = 0`, (err, rows, fields) => {
     if (rows) {
-      rows.forEach(item => { 
+      rows.forEach(item => {
         results[item.age] += 1
         results["total"]++
       })
@@ -1017,7 +1017,7 @@ app.get('/child/purok', (req, res) => {
     JOIN child ON link.id = child.id
     WHERE guardian.soft_delete = 0`, (err, rows, fields) => {
     if (rows) {
-      rows.forEach(item => { 
+      rows.forEach(item => {
         results[item.purok] += 1
         results["total"]++
       })
@@ -1030,9 +1030,113 @@ app.get('/child/purok', (req, res) => {
   })
 });
 
+app.get('/testes', async (req, res) => {
+  const { test } = req.query
+  console.log(test);
+
+  res.send(test)
+})
+
+// #test
+app.get('/report', async (req, res) => {
+  const { to, from } = req.query
+  const writeXlsxFile = require('write-excel-file/node')
+
+  let CHILD_LATEST_RECORDS
+  const CHILD_LATEST_RECORDS_COLUMNS = [
+    { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
+    { width: 20 }, { width: 10 }, { width: 10 } // date
+  ]
+
+  const query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+      record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
+    FROM    record 
+      JOIN child ON record.id = child.id
+      JOIN user ON user.user_id = record.user_id
+    WHERE   
+      date >= '${from}' AND
+      date <= '${to}'`;
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows.length) {
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Height', fontWeight: 'bold' },
+        { value: 'Weight', fontWeight: 'bold' },
+        { value: 'Remark', fontWeight: 'bold' },
+        { value: 'Output', fontWeight: 'bold' },
+        { value: 'Date', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
+      ]
+
+      let DATA_ROWS = []
+
+      rows.forEach(row => {
+        // console.log(row.date.toUTCString())
+
+        DATA_ROWS.push([
+          { type: String, value: row.fname },
+          { type: String, value: row.lname },
+          { type: Number, value: row.age },
+          { type: Number, value: Number(row.height.toFixed(2)) },
+          { type: Number, value: Number(row.weight.toFixed(2)) },
+          { type: String, value: row.remark },
+          { type: Number, value: Number(row.output.toFixed(2)) },
+          { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+          { type: String, value: `${row.user_fname} ${row.user_lname}` }
+        ])
+      })
+
+      CHILD_LATEST_RECORDS = [HEADER_ROW, ...DATA_ROWS]
+    }
+    else {
+      res.json({ "message": "No Data(s) Found" })
+    }
+  })
+
+  setTimeout(async () => {
+    await writeXlsxFile([CHILD_LATEST_RECORDS], {
+      columns: [CHILD_LATEST_RECORDS_COLUMNS],
+      filePath: 'report/test.xlsx',
+      sheets: ['Child Latest Records'],
+    })
+
+    res.download('report/test.xlsx')
+  }, 1000)
+})
+
 // excel
 app.get('/child/data', async (req, res) => {
+  const { to, from } = req.query
   const writeXlsxFile = require('write-excel-file/node')
+
+  let query = `SELECT
+    child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,  
+    link.relationship
+    FROM child 
+    LEFT OUTER JOIN link ON link.id = child.id 
+    LEFT OUTER JOIN guardian ON guardian.guardian_id = link.guardian_id
+    WHERE child.soft_delete = 0 ORDER BY child.lname`
+
+  if (to) {
+    // code
+  }
+  else if (from) {
+    // code
+  }
+  else if (to && from) {
+    query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+      record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
+      FROM    record 
+        JOIN child ON record.id = child.id
+        JOIN user ON user.user_id = record.user_id
+      WHERE   
+        date >= '${from}' AND
+        date <= '${to}'`
+  }
 
   let CHILD_LIST, CHILD_LATEST_RECORDS
   const CHILD_LIST_COLUMNS = [
@@ -1043,14 +1147,7 @@ app.get('/child/data', async (req, res) => {
     { width: 20 }, { width: 10 }, { width: 10 } // date
   ]
 
-  connection.query(`SELECT
-    child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,  
-    link.relationship
-    FROM child 
-    LEFT OUTER JOIN link ON link.id = child.id 
-    LEFT OUTER JOIN guardian ON guardian.guardian_id = link.guardian_id
-    WHERE child.soft_delete = 0 ORDER BY child.lname`, (err, rows, fields) => {
+  connection.query(query, (err, rows, fields) => {
     if (rows) {
       const HEADER_ROW = [
         { value: 'First Name', fontWeight: 'bold' },
@@ -1074,7 +1171,7 @@ app.get('/child/data', async (req, res) => {
           { type: String, value: row.guard_lname },
           { type: String, value: row.household_id },
           { type: String, value: row.relationship },
-          { type: Number, value: row.purok}
+          { type: Number, value: row.purok }
         ])
       })
 
@@ -1118,7 +1215,7 @@ app.get('/child/data', async (req, res) => {
           { type: String, value: row.remark },
           { type: Number, value: Number(row.output.toFixed(2)) },
           { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
-          { type: String, value: `${row.user_fname} ${row.user_lname}`  }
+          { type: String, value: `${row.user_fname} ${row.user_lname}` }
         ])
       })
 
