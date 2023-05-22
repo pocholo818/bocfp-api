@@ -1121,23 +1121,6 @@ app.get('/child/data', async (req, res) => {
     LEFT OUTER JOIN guardian ON guardian.guardian_id = link.guardian_id
     WHERE child.soft_delete = 0 ORDER BY child.lname`
 
-  if (to) {
-    // code
-  }
-  else if (from) {
-    // code
-  }
-  else if (to && from) {
-    query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-      record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
-      FROM    record 
-        JOIN child ON record.id = child.id
-        JOIN user ON user.user_id = record.user_id
-      WHERE   
-        date >= '${from}' AND
-        date <= '${to}'`
-  }
-
   let CHILD_LIST, CHILD_LATEST_RECORDS
   const CHILD_LIST_COLUMNS = [
     {}, {}, {}, {}, {}, {}, {},
@@ -1178,6 +1161,24 @@ app.get('/child/data', async (req, res) => {
       CHILD_LIST = [HEADER_ROW, ...DATA_ROWS]
     }
   })
+
+  // if date is specified, change query
+  // if (to) {
+  //   // code
+  // }
+  // else if (from) {
+  //   // code
+  // }
+  // else if (to && from) {
+  //   query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+  //     record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
+  //     FROM    record 
+  //       JOIN child ON record.id = child.id
+  //       JOIN user ON user.user_id = record.user_id
+  //     WHERE   
+  //       date >= '${from}' AND
+  //       date <= '${to}'`
+  // }
 
   connection.query(`SELECT
     child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
