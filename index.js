@@ -8,6 +8,8 @@ var moment = require('moment');
 const jwt = require('jsonwebtoken')
 require("dotenv").config();
 
+const writeXlsxFile = require('write-excel-file/node')
+
 const port = 5000;
 app.use(cors())
 app.use(express.json({ limit: '50mb' }));
@@ -1037,13 +1039,37 @@ app.get('/testes', async (req, res) => {
   res.send(test)
 })
 
-// #test
-app.get('/report', async (req, res) => {
-  const { to, from } = req.query
-  const writeXlsxFile = require('write-excel-file/node')
+// report generate
 
-  let CHILD_LATEST_RECORDS
-  const CHILD_LATEST_RECORDS_COLUMNS = [
+// get all children list
+app.post('/report', async (req, res) => {
+  const body = req.body
+
+  console.log(body)
+
+  if (body.childrenList) {
+    generateChildrenListXlsx()
+  }
+  if (body.latestRecord) {
+    generateLatestRecordXlsx()
+  }
+  if (body.childrenRecords) {
+    if (body.childrenRecords.value === 'specificDateRange') {
+      const { from, to } = body.childrenRecords
+      generateChildrenSpecificDateRangeXlsx(from, to)
+    }
+    else if (body.childrenRecords.value === 'history') {
+
+    }
+    console.log('children records')
+  }
+
+  res.json({ message: 'yay' })
+})
+
+function generateChildrenSpecificDateRangeXlsx(from, to) {
+  let DATA
+  const COLUMNS = [
     { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
     { width: 20 }, { width: 10 }, { width: 10 } // date
   ]
@@ -1089,7 +1115,7 @@ app.get('/report', async (req, res) => {
         ])
       })
 
-      CHILD_LATEST_RECORDS = [HEADER_ROW, ...DATA_ROWS]
+      DATA = [HEADER_ROW, ...DATA_ROWS]
     }
     else {
       res.json({ "message": "No Data(s) Found" })
@@ -1097,15 +1123,134 @@ app.get('/report', async (req, res) => {
   })
 
   setTimeout(async () => {
-    await writeXlsxFile([CHILD_LATEST_RECORDS], {
-      columns: [CHILD_LATEST_RECORDS_COLUMNS],
-      filePath: 'report/test.xlsx',
-      sheets: ['Child Latest Records'],
+    await writeXlsxFile([DATA], {
+      columns: [COLUMNS],
+      filePath: 'report/Children Specific Date Range.xlsx',
+      sheets: ['Children Specific Date Range'],
     })
-
-    res.download('report/test.xlsx')
   }, 1000)
-})
+}
+
+function generateChildrenListXlsx() {
+  let query = `SELECT
+    child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+    guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,  
+    link.relationship
+    FROM child 
+    LEFT OUTER JOIN link ON link.id = child.id 
+    LEFT OUTER JOIN guardian ON guardian.guardian_id = link.guardian_id
+    WHERE child.soft_delete = 0 ORDER BY child.lname`
+
+  let DATA;
+  const COLUMNS = [
+    {}, {}, {}, {}, {}, {}, {},
+  ]
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows) {
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Guardian First Name', fontWeight: 'bold' },
+        { value: 'Guardian Last Name', fontWeight: 'bold' },
+        { value: 'Guardian Household ID', fontWeight: 'bold' },
+        { value: 'Relationship', fontWeight: 'bold' },
+        { value: 'Purok', fontWeight: 'bold' }
+      ]
+
+      let DATA_ROWS = []
+
+      rows.forEach(row => {
+        DATA_ROWS.push([
+          { type: String, value: row.fname },
+          { type: String, value: row.lname },
+          { type: Number, value: row.age },
+          { type: String, value: row.guard_fname },
+          { type: String, value: row.guard_lname },
+          { type: String, value: row.household_id },
+          { type: String, value: row.relationship },
+          { type: Number, value: row.purok }
+        ])
+      })
+
+      DATA = [HEADER_ROW, ...DATA_ROWS]
+    }
+  })
+
+  setTimeout(async () => {
+    await writeXlsxFile([DATA], {
+      columns: [COLUMNS],
+      filePath: 'report/Children List.xlsx',
+      sheets: ['Children List'],
+    })
+  }, 1000)
+}
+
+function generateLatestRecordXlsx() {
+  let DATA;
+  const COLUMNS = [
+    { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
+    { width: 20 }, { width: 10 }, { width: 10 } // date
+  ]
+
+  const query = `SELECT
+    child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+    record.height, record.weight, record.output, record.remark, record.date, record.record_id,
+    user.fname AS user_fname, user.lname AS user_lname
+    FROM child 
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    INNER JOIN user ON user.user_id = record.user_id
+    WHERE child.soft_delete = 0 GROUP BY child.id ORDER BY child.lname`;
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows.length) {
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Height', fontWeight: 'bold' },
+        { value: 'Weight', fontWeight: 'bold' },
+        { value: 'Remark', fontWeight: 'bold' },
+        { value: 'Output', fontWeight: 'bold' },
+        { value: 'Date', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
+      ]
+
+      let DATA_ROWS = []
+
+      rows.forEach(row => {
+        // console.log(row.date.toUTCString())
+
+        DATA_ROWS.push([
+          { type: String, value: row.fname },
+          { type: String, value: row.lname },
+          { type: Number, value: row.age },
+          { type: Number, value: Number(row.height.toFixed(2)) },
+          { type: Number, value: Number(row.weight.toFixed(2)) },
+          { type: String, value: row.remark },
+          { type: Number, value: Number(row.output.toFixed(2)) },
+          { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+          { type: String, value: `${row.user_fname} ${row.user_lname}` }
+        ])
+      })
+
+      DATA = [HEADER_ROW, ...DATA_ROWS]
+    }
+    else {
+      res.json({ "message": "No Data(s) Found" })
+    }
+  })
+
+  setTimeout(async () => {
+    await writeXlsxFile([DATA], {
+      columns: [COLUMNS],
+      filePath: 'report/Children Latest Record.xlsx',
+      sheets: ['Children Latest Record'],
+    })
+  }, 1000)
+}
 
 // excel
 app.get('/child/data', async (req, res) => {
@@ -1161,6 +1306,8 @@ app.get('/child/data', async (req, res) => {
       CHILD_LIST = [HEADER_ROW, ...DATA_ROWS]
     }
   })
+
+  let queryRemarks
 
   // if date is specified, change query
   // if (to) {
@@ -1241,6 +1388,8 @@ app.get('/child/data', async (req, res) => {
     res.download('report/bocfp.xlsx')
   }, 1000)
 });
+
+// 
 
 // HARD DELETE
 // delete link
