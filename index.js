@@ -1058,78 +1058,20 @@ app.post('/report', async (req, res) => {
       const { from, to } = body.childrenRecords
       generateChildrenSpecificDateRangeXlsx(from, to)
     }
-    else if (body.childrenRecords.value === 'history') {
-
-    }
-    console.log('children records')
+    // else if (body.childrenRecords.value === 'history') {
+    //   const { year, filter } = body.childrenRecords
+    //   res.json(generateChildrenHistoryXlsx(filter, year))
+    // }
+  }
+  if (body.childrenRemark) {
+    generateChildrenRemarkXlsx(body.childrenRemark)
+  }
+  if (body.childrenPurok) {
+    generateChildrenPurokXlsx(body.childrenPurok)
   }
 
   res.json({ message: 'yay' })
 })
-
-function generateChildrenSpecificDateRangeXlsx(from, to) {
-  let DATA
-  const COLUMNS = [
-    { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
-    { width: 20 }, { width: 10 }, { width: 10 } // date
-  ]
-
-  const query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-      record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
-    FROM    record 
-      JOIN child ON record.id = child.id
-      JOIN user ON user.user_id = record.user_id
-    WHERE   
-      date >= '${from}' AND
-      date <= '${to}'`;
-
-  connection.query(query, (err, rows, fields) => {
-    if (rows.length) {
-      const HEADER_ROW = [
-        { value: 'First Name', fontWeight: 'bold' },
-        { value: 'Last Name', fontWeight: 'bold' },
-        { value: 'Age', fontWeight: 'bold' },
-        { value: 'Height', fontWeight: 'bold' },
-        { value: 'Weight', fontWeight: 'bold' },
-        { value: 'Remark', fontWeight: 'bold' },
-        { value: 'Output', fontWeight: 'bold' },
-        { value: 'Date', fontWeight: 'bold' },
-        { value: 'Recorded By', fontWeight: 'bold' }
-      ]
-
-      let DATA_ROWS = []
-
-      rows.forEach(row => {
-        // console.log(row.date.toUTCString())
-
-        DATA_ROWS.push([
-          { type: String, value: row.fname },
-          { type: String, value: row.lname },
-          { type: Number, value: row.age },
-          { type: Number, value: Number(row.height.toFixed(2)) },
-          { type: Number, value: Number(row.weight.toFixed(2)) },
-          { type: String, value: row.remark },
-          { type: Number, value: Number(row.output.toFixed(2)) },
-          { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
-          { type: String, value: `${row.user_fname} ${row.user_lname}` }
-        ])
-      })
-
-      DATA = [HEADER_ROW, ...DATA_ROWS]
-    }
-    else {
-      res.json({ "message": "No Data(s) Found" })
-    }
-  })
-
-  setTimeout(async () => {
-    await writeXlsxFile([DATA], {
-      columns: [COLUMNS],
-      filePath: 'report/Children Specific Date Range.xlsx',
-      sheets: ['Children Specific Date Range'],
-    })
-  }, 1000)
-}
 
 function generateChildrenListXlsx() {
   let query = `SELECT
@@ -1187,6 +1129,263 @@ function generateChildrenListXlsx() {
   }, 1000)
 }
 
+function generateChildrenSpecificDateRangeXlsx(from, to) {
+  let DATA
+  const COLUMNS = [
+    { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
+    { width: 20 }, { width: 10 }, { width: 10 } // date
+  ]
+
+  const query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+    record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
+    FROM    record 
+      JOIN child ON record.id = child.id
+      JOIN user ON user.user_id = record.user_id
+    WHERE   
+      date >= '${from}' AND
+      date <= '${to}'`;
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows.length) {
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Height', fontWeight: 'bold' },
+        { value: 'Weight', fontWeight: 'bold' },
+        { value: 'Remark', fontWeight: 'bold' },
+        { value: 'Output', fontWeight: 'bold' },
+        { value: 'Date', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
+      ]
+
+      let DATA_ROWS = []
+
+      rows.forEach(row => {
+        // console.log(row.date.toUTCString())
+
+        DATA_ROWS.push([
+          { type: String, value: row.fname },
+          { type: String, value: row.lname },
+          { type: Number, value: row.age },
+          { type: Number, value: Number(row.height.toFixed(2)) },
+          { type: Number, value: Number(row.weight.toFixed(2)) },
+          { type: String, value: row.remark },
+          { type: Number, value: Number(row.output.toFixed(2)) },
+          { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+          { type: String, value: `${row.user_fname} ${row.user_lname}` }
+        ])
+      })
+
+      DATA = [HEADER_ROW, ...DATA_ROWS]
+    }
+  })
+
+  setTimeout(async () => {
+    await writeXlsxFile([DATA], {
+      columns: [COLUMNS],
+      filePath: `report/Children Specific Date Range (${from} - ${to}).xlsx`,
+      sheets: [`${from} - ${to}`],
+    })
+  }, 1000)
+}
+
+// function generateChildrenHistoryXlsx(filterType, year) {
+//   let from, to, limit
+
+//   let SHEETS = []
+//   let DATASHEET = []
+//   let COLUMNS = []
+
+//   switch (filterType) {
+//     case 'monthly':
+//       from = 1
+//       to = 1
+//       limit = 12
+//       break;
+//     case 'quarterly':
+//       from = 1
+//       to = 3
+//       limit = 4
+//       break;
+//     case 'semi-annually':
+//       from = 1
+//       to = 6
+//       limit = 2
+//       break;
+//     case 'annually':
+//       from = 1
+//       to = 12
+//       limit = 1
+//   }
+
+//   for (i = 1; i <= limit; i++) {
+//     console.log(`from: ${from} to: ${to} filter: ${filterType}`)
+
+//     switch (filterType) {
+//       case 'monthly':
+//         from++
+//         break
+//       case 'quarterly':
+//         from += 3
+//         to += 3
+//         SHEETS.push('Q' + i)
+//         break
+//       case 'semi-annually':
+//         from += 6
+//         to += 6
+//         break
+//       case 'annually':
+//         SHEETS.push(year)
+//     }
+
+//     COLUMNS.push([
+//       { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
+//       { width: 20 }, { width: 10 }, { width: 10 }
+//     ])
+
+//     const query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+//       record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
+//       FROM  record 
+//         JOIN child ON record.id = child.id
+//         JOIN user ON user.user_id = record.user_id
+//       WHERE   
+//         YEAR(date) = ${year}`
+
+//     connection.query(query, (err, rows, fields) => {
+//       let DATASHEET_RECORDS = []
+
+//       if (rows.length) {
+//         const HEADER_ROW = [
+//           { value: 'First Name', fontWeight: 'bold' },
+//           { value: 'Last Name', fontWeight: 'bold' },
+//           { value: 'Age', fontWeight: 'bold' },
+//           { value: 'Height', fontWeight: 'bold' },
+//           { value: 'Weight', fontWeight: 'bold' },
+//           { value: 'Remark', fontWeight: 'bold' },
+//           { value: 'Output', fontWeight: 'bold' },
+//           { value: 'Date', fontWeight: 'bold' },
+//           { value: 'Recorded By', fontWeight: 'bold' }
+//         ]
+
+//         let DATA_ROWS = []
+
+//         rows.forEach(row => {
+//           DATA_ROWS.push([
+//             { type: String, value: row.fname },
+//             { type: String, value: row.lname },
+//             { type: Number, value: row.age },
+//             { type: Number, value: Number(row.height.toFixed(2)) },
+//             { type: Number, value: Number(row.weight.toFixed(2)) },
+//             { type: String, value: row.remark },
+//             { type: Number, value: Number(row.output.toFixed(2)) },
+//             { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+//             { type: String, value: `${row.user_fname} ${row.user_lname}` }
+//           ])
+//         })
+
+//         DATASHEET_RECORDS.push([HEADER_ROW, ...DATA_ROWS])
+//       }
+
+//       DATASHEET.push([DATASHEET_RECORDS])
+
+//       // console.log(`DATA: ${DATASHEET}`);
+//       // DATASHEET.forEach(item => {
+//       //   item.forEach(itemm => {
+//       //     console.log(itemm)
+//       //   })
+//       // })
+
+//       // console.log(`COLUMNS: ${COLUMNS}`);
+//       // console.log(`SHEETS: ${SHEETS}`);
+//       // else {
+//       //   res.json({ "message": "No Data(s) Found" })
+//       // }
+//     })
+//   }
+
+//   setTimeout(async () => {
+//     if (filterType === 'annually') {
+//       await writeXlsxFile(DATASHEET, {
+//         columns: COLUMNS,
+//         filePath: 'report/Children History.xlsx',
+//         sheets: SHEETS,
+//       })
+//     }
+//     else {
+//       await writeXlsxFile([DATASHEET], {
+//         columns: [COLUMNS],
+//         filePath: 'report/Children History.xlsx',
+//         sheets: [SHEETS],
+//       })
+//     }
+//   }, 1000)
+
+//   return DATASHEET
+// }
+
+function generateChildrenRemarkXlsx(remark) {
+  let DATA;
+  const COLUMNS = [
+    { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
+    { width: 20 }, { width: 10 }, { width: 10 } // date
+  ]
+
+  const query = `SELECT
+    child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+    record.height, record.weight, record.output, record.remark, record.date, record.record_id,
+    user.fname AS user_fname, user.lname AS user_lname
+    FROM child 
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    INNER JOIN user ON user.user_id = record.user_id
+    WHERE child.soft_delete = 0  AND record.remark = '${remark}' GROUP BY child.id ORDER BY child.lname`;
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows.length) {
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Height', fontWeight: 'bold' },
+        { value: 'Weight', fontWeight: 'bold' },
+        { value: 'Remark', fontWeight: 'bold' },
+        { value: 'Output', fontWeight: 'bold' },
+        { value: 'Date', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
+      ]
+
+      let DATA_ROWS = []
+
+      rows.forEach(row => {
+        // console.log(row.date.toUTCString())
+
+        DATA_ROWS.push([
+          { type: String, value: row.fname },
+          { type: String, value: row.lname },
+          { type: Number, value: row.age },
+          { type: Number, value: Number(row.height.toFixed(2)) },
+          { type: Number, value: Number(row.weight.toFixed(2)) },
+          { type: String, value: row.remark },
+          { type: Number, value: Number(row.output.toFixed(2)) },
+          { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+          { type: String, value: `${row.user_fname} ${row.user_lname}` }
+        ])
+      })
+
+      DATA = [HEADER_ROW, ...DATA_ROWS]
+    }
+  })
+
+  setTimeout(async () => {
+    await writeXlsxFile([DATA], {
+      columns: [COLUMNS],
+      filePath: `report/Children Record by ${remark.charAt(0).toUpperCase() + remark.slice(1)} Remark.xlsx`,
+      sheets: [remark.charAt(0).toUpperCase() + remark.slice(1)],
+    })
+  }, 1000)
+}
+
 function generateLatestRecordXlsx() {
   let DATA;
   const COLUMNS = [
@@ -1238,9 +1437,6 @@ function generateLatestRecordXlsx() {
 
       DATA = [HEADER_ROW, ...DATA_ROWS]
     }
-    else {
-      res.json({ "message": "No Data(s) Found" })
-    }
   })
 
   setTimeout(async () => {
@@ -1248,6 +1444,69 @@ function generateLatestRecordXlsx() {
       columns: [COLUMNS],
       filePath: 'report/Children Latest Record.xlsx',
       sheets: ['Children Latest Record'],
+    })
+  }, 1000)
+}
+
+function generateChildrenPurokXlsx(purok) {
+  let query = `SELECT
+    child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+    record.height, record.weight, record.output, record.remark, record.date, record.record_id,
+    user.fname AS user_fname, user.lname AS user_lname
+    FROM child 
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    INNER JOIN user ON user.user_id = record.user_id
+    LEFT OUTER JOIN link ON link.id = child.id 
+    LEFT OUTER JOIN guardian ON guardian.guardian_id = link.guardian_id
+    WHERE child.soft_delete = 0  AND guardian.purok = '${purok}' GROUP BY child.id ORDER BY child.lname`
+
+  let DATA;
+  const COLUMNS = [
+    {}, {}, {}, {}, {}, {}, {},
+  ]
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows.length) {
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Height', fontWeight: 'bold' },
+        { value: 'Weight', fontWeight: 'bold' },
+        { value: 'Remark', fontWeight: 'bold' },
+        { value: 'Output', fontWeight: 'bold' },
+        { value: 'Date', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
+      ]
+
+      let DATA_ROWS = []
+
+      rows.forEach(row => {
+        // console.log(row.date.toUTCString())
+
+        DATA_ROWS.push([
+          { type: String, value: row.fname },
+          { type: String, value: row.lname },
+          { type: Number, value: row.age },
+          { type: Number, value: Number(row.height.toFixed(2)) },
+          { type: Number, value: Number(row.weight.toFixed(2)) },
+          { type: String, value: row.remark },
+          { type: Number, value: Number(row.output.toFixed(2)) },
+          { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+          { type: String, value: `${row.user_fname} ${row.user_lname}` }
+        ])
+      })
+
+      DATA = [HEADER_ROW, ...DATA_ROWS]
+    }
+  })
+
+  setTimeout(async () => {
+    await writeXlsxFile([DATA], {
+      columns: [COLUMNS],
+      filePath: `report/Children Records of Purok ${purok}.xlsx`,
+      sheets: [`Purok ${purok}`],
     })
   }, 1000)
 }
