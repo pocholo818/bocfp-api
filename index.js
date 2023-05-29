@@ -7,6 +7,7 @@ const fs = require('fs');
 var moment = require('moment');
 const jwt = require('jsonwebtoken')
 require("dotenv").config();
+var AdmZip = require("adm-zip");
 
 const writeXlsxFile = require('write-excel-file/node')
 
@@ -1033,44 +1034,53 @@ app.get('/child/purok', (req, res) => {
 });
 
 app.get('/testes', async (req, res) => {
-  const { test } = req.query
-  console.log(test);
-
-  res.send(test)
+  res.download('report/zip/files.zip')
 })
 
 // report generate
 
 // get all children list
-app.post('/report', async (req, res) => {
-  const body = req.body
+app.get('/report', async (req, res) => {
+  let filesNumber = 0
 
-  console.log(body)
+  const { childrenList, latestRecord, childrenRecords, childrenRemark, childrenPurok } = req.query
 
-  if (body.childrenList) {
+  // console.log(body)
+
+  if (childrenList) {
+    filesNumber++
     generateChildrenListXlsx()
   }
-  if (body.latestRecord) {
+  if (latestRecord) {
+    filesNumber++
     generateLatestRecordXlsx()
   }
-  if (body.childrenRecords) {
+  if (childrenRecords) {
+    filesNumber++
     if (body.childrenRecords.value === 'specificDateRange') {
-      const { from, to } = body.childrenRecords
+      const { from, to } = req.query
       generateChildrenSpecificDateRangeXlsx(from, to)
     }
     // else if (body.childrenRecords.value === 'history') {
-    //   const { year, filter } = body.childrenRecords
+    //   const { year, filter } = req.query
     //   res.json(generateChildrenHistoryXlsx(filter, year))
     // }
   }
-  if (body.childrenRemark) {
+  if (childrenRemark) {
+    filesNumber++
     generateChildrenRemarkXlsx(body.childrenRemark)
   }
-  if (body.childrenPurok) {
+  if (childrenPurok) {
+    filesNumber++
     generateChildrenPurokXlsx(body.childrenPurok)
   }
 
-  res.json({ message: 'yay' })
+  // zip
+  var zip = new AdmZip();
+  zip.addLocalFile("report/Children List.xlsx")
+  zip.writeZip("report/zip/files.zip")
+
+  res.download('report/zip/files.zip')
 })
 
 function generateChildrenListXlsx() {
