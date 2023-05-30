@@ -30,6 +30,10 @@ const connection = mysql.createConnection({
   database: 'bocfp'
 })
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function authenticateToken(admin_power) {
   return (req, res, next) => {
     const authHeader = req.headers['authorization']
@@ -1041,49 +1045,52 @@ app.get('/testes', async (req, res) => {
 
 // get all children list
 app.get('/report', async (req, res) => {
-  let filesNumber = 0
+  let files = []
 
   const { childrenList, latestRecord, childrenRecords, childrenRemark, childrenPurok } = req.query
 
-  // console.log(body)
+  console.log(childrenPurok)
 
   if (childrenList) {
-    filesNumber++
-    generateChildrenListXlsx()
+    files.push(await generateChildrenListXlsx())
+    console.log('children list done')
   }
   if (latestRecord) {
-    filesNumber++
-    generateLatestRecordXlsx()
+    files.push(await generateLatestRecordXlsx())
+    console.log('later record done')
   }
   if (childrenRecords) {
-    filesNumber++
-    if (body.childrenRecords.value === 'specificDateRange') {
-      const { from, to } = req.query
-      generateChildrenSpecificDateRangeXlsx(from, to)
+    const { from, to, year, filter } = req.query
+
+    if (from && to) {
+      files.push(await generateChildrenSpecificDateRangeXlsx(from, to))
     }
-    // else if (body.childrenRecords.value === 'history') {
-    //   const { year, filter } = req.query
+    // else if (year, filter) {
     //   res.json(generateChildrenHistoryXlsx(filter, year))
     // }
   }
   if (childrenRemark) {
-    filesNumber++
-    generateChildrenRemarkXlsx(body.childrenRemark)
+    files.push(await generateChildrenRemarkXlsx(childrenRemark))
+    console.log('children remark done')
   }
   if (childrenPurok) {
-    filesNumber++
-    generateChildrenPurokXlsx(body.childrenPurok)
+    files.push(await generateChildrenPurokXlsx(childrenPurok))
+    console.log('children purok done')
   }
 
   // zip
   var zip = new AdmZip();
-  zip.addLocalFile("report/Children List.xlsx")
-  zip.writeZip("report/zip/files.zip")
 
-  res.download('report/zip/files.zip')
+  for (let file of files) {
+    zip.addLocalFile(`report/${file}`)
+  }
+
+  const zipFile = 'report/zip/BOCFP Report Files.zip'
+  zip.writeZip(zipFile)
+  res.download(zipFile)
 })
 
-function generateChildrenListXlsx() {
+async function generateChildrenListXlsx() {
   let query = `SELECT
     child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
     guardian.fname AS guard_fname, guardian.lname AS guard_lname, guardian.household_id, guardian.purok,  
@@ -1130,16 +1137,22 @@ function generateChildrenListXlsx() {
     }
   })
 
-  setTimeout(async () => {
-    await writeXlsxFile([DATA], {
-      columns: [COLUMNS],
-      filePath: 'report/Children List.xlsx',
-      sheets: ['Children List'],
-    })
-  }, 1000)
+  await sleep(1000)
+
+  // setTimeout(async () => {
+  await writeXlsxFile([DATA], {
+    columns: [COLUMNS],
+    filePath: 'report/Children List.xlsx',
+    sheets: ['Children List'],
+  })
+  // }, 1000)
+
+  return 'Children List.xlsx'
 }
 
-function generateChildrenSpecificDateRangeXlsx(from, to) {
+async function generateChildrenSpecificDateRangeXlsx(from, to) {
+  console.log(`from ${from}, to ${to}`)
+
   let DATA
   const COLUMNS = [
     { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
@@ -1191,13 +1204,19 @@ function generateChildrenSpecificDateRangeXlsx(from, to) {
     }
   })
 
-  setTimeout(async () => {
-    await writeXlsxFile([DATA], {
-      columns: [COLUMNS],
-      filePath: `report/Children Specific Date Range (${from} - ${to}).xlsx`,
-      sheets: [`${from} - ${to}`],
-    })
-  }, 1000)
+  const FILE_NAME = `Children Specific Date Range (${from} - ${to}).xlsx`
+
+  await sleep(1000)
+
+  // setTimeout(async () => {
+  await writeXlsxFile([DATA], {
+    columns: [COLUMNS],
+    filePath: `report/${FILE_NAME}`,
+    sheets: [`${from} - ${to}`],
+  })
+  // }, 1000)
+
+  return FILE_NAME
 }
 
 // function generateChildrenHistoryXlsx(filterType, year) {
@@ -1334,7 +1353,7 @@ function generateChildrenSpecificDateRangeXlsx(from, to) {
 //   return DATASHEET
 // }
 
-function generateChildrenRemarkXlsx(remark) {
+async function generateChildrenRemarkXlsx(remark) {
   let DATA;
   const COLUMNS = [
     { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
@@ -1387,16 +1406,22 @@ function generateChildrenRemarkXlsx(remark) {
     }
   })
 
-  setTimeout(async () => {
-    await writeXlsxFile([DATA], {
-      columns: [COLUMNS],
-      filePath: `report/Children Record by ${remark.charAt(0).toUpperCase() + remark.slice(1)} Remark.xlsx`,
-      sheets: [remark.charAt(0).toUpperCase() + remark.slice(1)],
-    })
-  }, 1000)
+  const FILE_NAME = `Children Record by ${remark.charAt(0).toUpperCase() + remark.slice(1)} Remark.xlsx`
+
+  await sleep(1000)
+
+  // setTimeout(async () => {
+  await writeXlsxFile([DATA], {
+    columns: [COLUMNS],
+    filePath: `report/${FILE_NAME}`,
+    sheets: [remark.charAt(0).toUpperCase() + remark.slice(1)],
+  })
+  // }, 1000)
+
+  return FILE_NAME
 }
 
-function generateLatestRecordXlsx() {
+async function generateLatestRecordXlsx() {
   let DATA;
   const COLUMNS = [
     { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
@@ -1449,16 +1474,20 @@ function generateLatestRecordXlsx() {
     }
   })
 
-  setTimeout(async () => {
-    await writeXlsxFile([DATA], {
-      columns: [COLUMNS],
-      filePath: 'report/Children Latest Record.xlsx',
-      sheets: ['Children Latest Record'],
-    })
-  }, 1000)
+  await sleep(1000)
+
+  // setTimeout(async () => {
+  await writeXlsxFile([DATA], {
+    columns: [COLUMNS],
+    filePath: 'report/Children Latest Record.xlsx',
+    sheets: ['Children Latest Record'],
+  })
+  // }, 1000)
+
+  return 'Children Latest Record.xlsx'
 }
 
-function generateChildrenPurokXlsx(purok) {
+async function generateChildrenPurokXlsx(purok) {
   let query = `SELECT
     child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
     record.height, record.weight, record.output, record.remark, record.date, record.record_id,
@@ -1469,11 +1498,11 @@ function generateChildrenPurokXlsx(purok) {
     INNER JOIN user ON user.user_id = record.user_id
     LEFT OUTER JOIN link ON link.id = child.id 
     LEFT OUTER JOIN guardian ON guardian.guardian_id = link.guardian_id
-    WHERE child.soft_delete = 0  AND guardian.purok = '${purok}' GROUP BY child.id ORDER BY child.lname`
+    WHERE child.soft_delete = 0  AND guardian.purok = '11' GROUP BY child.id ORDER BY child.lname`
 
   let DATA;
   const COLUMNS = [
-    {}, {}, {}, {}, {}, {}, {},
+    {}, {}, {}, {}, {}, {}, {}, {}, {}
   ]
 
   connection.query(query, (err, rows, fields) => {
@@ -1512,13 +1541,19 @@ function generateChildrenPurokXlsx(purok) {
     }
   })
 
-  setTimeout(async () => {
-    await writeXlsxFile([DATA], {
-      columns: [COLUMNS],
-      filePath: `report/Children Records of Purok ${purok}.xlsx`,
-      sheets: [`Purok ${purok}`],
-    })
-  }, 1000)
+  const FILE_NAME = `Children Records of Purok ${purok}.xlsx`
+
+  await sleep(1000)
+
+  // setTimeout(async () => {
+  await writeXlsxFile([DATA], {
+    columns: [COLUMNS],
+    filePath: `report/${FILE_NAME}`,
+    sheets: [`Purok ${purok}`]
+  })
+  // }, 1000)
+
+  return FILE_NAME
 }
 
 // excel
