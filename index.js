@@ -1049,15 +1049,11 @@ app.get('/report', async (req, res) => {
 
   const { childrenList, latestRecord, childrenRecords, childrenRemark, childrenPurok } = req.query
 
-  console.log(childrenPurok)
-
   if (childrenList) {
     files.push(await generateChildrenListXlsx())
-    console.log('children list done')
   }
   if (latestRecord) {
     files.push(await generateLatestRecordXlsx())
-    console.log('later record done')
   }
   if (childrenRecords) {
     const { from, to, year, filter } = req.query
@@ -1071,11 +1067,10 @@ app.get('/report', async (req, res) => {
   }
   if (childrenRemark) {
     files.push(await generateChildrenRemarkXlsx(childrenRemark))
-    console.log('children remark done')
+
   }
   if (childrenPurok) {
     files.push(await generateChildrenPurokXlsx(childrenPurok))
-    console.log('children purok done')
   }
 
   // zip
@@ -1151,8 +1146,6 @@ async function generateChildrenListXlsx() {
 }
 
 async function generateChildrenSpecificDateRangeXlsx(from, to) {
-  console.log(`from ${from}, to ${to}`)
-
   let DATA
   const COLUMNS = [
     { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
