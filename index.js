@@ -597,7 +597,7 @@ app.post('/record/:id', authenticateToken(0), (req, res) => {
 // add new guardian
 app.post('/guardian', authenticateToken(0), (req, res) => {
   let { fname, lname } = req.body
-  const { contact, address, household_id } = req.body;
+  const { contact, address, household_id, purok } = req.body;
 
   fname = nameFormat(fname)
   lname = nameFormat(lname)
@@ -608,8 +608,8 @@ app.post('/guardian', authenticateToken(0), (req, res) => {
       res.status(409).json({ message: "Household ID already been taken" })
     }
     else {
-      connection.query(`INSERT INTO guardian (fname, lname, contact, address, household_id) 
-            VALUES ('${fname}', '${lname}', '${contact}', '${address}', '${household_id}')`, (err, rows, fields) => {
+      connection.query(`INSERT INTO guardian (fname, lname, contact, address, household_id, purok) 
+            VALUES ('${fname}', '${lname}', '${contact}', '${address}', '${household_id}', '${purok}')`, (err, rows, fields) => {
         if (err) throw err
       })
       res.status(200).json({ message: "success" })
