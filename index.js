@@ -1061,9 +1061,9 @@ app.get('/report', async (req, res) => {
     if (from && to) {
       files.push(await generateChildrenSpecificDateRangeXlsx(from, to))
     }
-    // else if (year, filter) {
-    //   res.json(generateChildrenHistoryXlsx(filter, year))
-    // }
+    else if (year, filter) {
+      files.push(await generateChildrenHistoryXlsx(filter, year))
+    }
   }
   if (childrenRemark) {
     files.push(await generateChildrenRemarkXlsx(childrenRemark))
@@ -1212,139 +1212,124 @@ async function generateChildrenSpecificDateRangeXlsx(from, to) {
   return FILE_NAME
 }
 
-// function generateChildrenHistoryXlsx(filterType, year) {
-//   let from, to, limit
+async function generateChildrenHistoryXlsx(filterType, year) {
+  let from, to, limit
 
-//   let SHEETS = []
-//   let DATASHEET = []
-//   let COLUMNS = []
+  let SHEETS = []
+  let DATASHEET = []
+  let COLUMNS = []
 
-//   switch (filterType) {
-//     case 'monthly':
-//       from = 1
-//       to = 1
-//       limit = 12
-//       break;
-//     case 'quarterly':
-//       from = 1
-//       to = 3
-//       limit = 4
-//       break;
-//     case 'semi-annually':
-//       from = 1
-//       to = 6
-//       limit = 2
-//       break;
-//     case 'annually':
-//       from = 1
-//       to = 12
-//       limit = 1
-//   }
+  switch (filterType) {
+    case 'monthly':
+      from = 1
+      to = 1
+      limit = 12
+      break;
+    case 'quarterly':
+      from = 1
+      to = 3
+      limit = 4
+      break;
+    case 'semi-annually':
+      from = 1
+      to = 6
+      limit = 2
+      break;
+    case 'annually':
+      from = 1
+      to = 12
+      limit = 1
+  }
 
-//   for (i = 1; i <= limit; i++) {
-//     console.log(`from: ${from} to: ${to} filter: ${filterType}`)
+  for (i = 1; i <= limit; i++) {
+    let query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
+      record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
+      FROM  record 
+        JOIN child ON record.id = child.id
+        JOIN user ON user.user_id = record.user_id
+      WHERE `
 
-//     switch (filterType) {
-//       case 'monthly':
-//         from++
-//         break
-//       case 'quarterly':
-//         from += 3
-//         to += 3
-//         SHEETS.push('Q' + i)
-//         break
-//       case 'semi-annually':
-//         from += 6
-//         to += 6
-//         break
-//       case 'annually':
-//         SHEETS.push(year)
-//     }
+    if (filterType !== 'annually') {
+      query += `YEAR(date) = ${year} AND 
+        MONTH(date) >= '${from}' AND
+        MONTH(date) <= '${to}' 
+        ORDER BY record.date`
+    }
 
-//     COLUMNS.push([
-//       { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
-//       { width: 20 }, { width: 10 }, { width: 10 }
-//     ])
+    switch (filterType) {
+      case 'monthly':
+        SHEETS.push([moment().month(from - 1).format("MMM")])
+        from++
+        to++
+        break
+      case 'quarterly':
+        SHEETS.push('Q' + i)
+        from += 3
+        to += 3
+        break
+      case 'semi-annually':
+        SHEETS.push('Year Half ' + i)
+        from += 6
+        to += 6
+        break
+      case 'annually':
+        SHEETS.push(year)
+        query += `YEAR(date) = ${year} ORDER BY record.date`
+    }
 
-//     const query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-//       record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
-//       FROM  record 
-//         JOIN child ON record.id = child.id
-//         JOIN user ON user.user_id = record.user_id
-//       WHERE   
-//         YEAR(date) = ${year}`
+    COLUMNS.push([
+      { width: 10 }, { width: 10 }, {}, {}, {}, { width: 10 }, {},
+      { width: 20 }, { width: 10 }, { width: 10 }
+    ])
 
-//     connection.query(query, (err, rows, fields) => {
-//       let DATASHEET_RECORDS = []
+    connection.query(query, (err, rows, fields) => {
+      let DATASHEET_RECORDS = []
 
-//       if (rows.length) {
-//         const HEADER_ROW = [
-//           { value: 'First Name', fontWeight: 'bold' },
-//           { value: 'Last Name', fontWeight: 'bold' },
-//           { value: 'Age', fontWeight: 'bold' },
-//           { value: 'Height', fontWeight: 'bold' },
-//           { value: 'Weight', fontWeight: 'bold' },
-//           { value: 'Remark', fontWeight: 'bold' },
-//           { value: 'Output', fontWeight: 'bold' },
-//           { value: 'Date', fontWeight: 'bold' },
-//           { value: 'Recorded By', fontWeight: 'bold' }
-//         ]
+      const HEADER_ROW = [
+        { value: 'First Name', fontWeight: 'bold' },
+        { value: 'Last Name', fontWeight: 'bold' },
+        { value: 'Age', fontWeight: 'bold' },
+        { value: 'Height', fontWeight: 'bold' },
+        { value: 'Weight', fontWeight: 'bold' },
+        { value: 'Remark', fontWeight: 'bold' },
+        { value: 'Output', fontWeight: 'bold' },
+        { value: 'Date', fontWeight: 'bold' },
+        { value: 'Recorded By', fontWeight: 'bold' }
+      ]
+      let DATA_ROWS = []
 
-//         let DATA_ROWS = []
+      if (rows.length) {
+        rows.forEach(row => {
+          DATA_ROWS.push([
+            { type: String, value: row.fname },
+            { type: String, value: row.lname },
+            { type: Number, value: row.age },
+            { type: Number, value: Number(row.height.toFixed(2)) },
+            { type: Number, value: Number(row.weight.toFixed(2)) },
+            { type: String, value: row.remark },
+            { type: Number, value: Number(row.output.toFixed(2)) },
+            { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
+            { type: String, value: `${row.user_fname} ${row.user_lname}` }
+          ])
+        })
+      }
 
-//         rows.forEach(row => {
-//           DATA_ROWS.push([
-//             { type: String, value: row.fname },
-//             { type: String, value: row.lname },
-//             { type: Number, value: row.age },
-//             { type: Number, value: Number(row.height.toFixed(2)) },
-//             { type: Number, value: Number(row.weight.toFixed(2)) },
-//             { type: String, value: row.remark },
-//             { type: Number, value: Number(row.output.toFixed(2)) },
-//             { type: String, value: moment(row.date).format('MMM DD, YYYY hh:mm A') },
-//             { type: String, value: `${row.user_fname} ${row.user_lname}` }
-//           ])
-//         })
+      DATASHEET_RECORDS.push([HEADER_ROW, ...DATA_ROWS])
 
-//         DATASHEET_RECORDS.push([HEADER_ROW, ...DATA_ROWS])
-//       }
+      DATASHEET.push(...DATASHEET_RECORDS)
+    })
+  }
 
-//       DATASHEET.push([DATASHEET_RECORDS])
+  await sleep(1000)
 
-//       // console.log(`DATA: ${DATASHEET}`);
-//       // DATASHEET.forEach(item => {
-//       //   item.forEach(itemm => {
-//       //     console.log(itemm)
-//       //   })
-//       // })
+  await writeXlsxFile([...DATASHEET], {
+    columns: [COLUMNS],
+    filePath: 'report/Children History.xlsx',
+    sheets: [...SHEETS],
+  })
 
-//       // console.log(`COLUMNS: ${COLUMNS}`);
-//       // console.log(`SHEETS: ${SHEETS}`);
-//       // else {
-//       //   res.json({ "message": "No Data(s) Found" })
-//       // }
-//     })
-//   }
-
-//   setTimeout(async () => {
-//     if (filterType === 'annually') {
-//       await writeXlsxFile(DATASHEET, {
-//         columns: COLUMNS,
-//         filePath: 'report/Children History.xlsx',
-//         sheets: SHEETS,
-//       })
-//     }
-//     else {
-//       await writeXlsxFile([DATASHEET], {
-//         columns: [COLUMNS],
-//         filePath: 'report/Children History.xlsx',
-//         sheets: [SHEETS],
-//       })
-//     }
-//   }, 1000)
-
-//   return DATASHEET
-// }
+  return 'Children History.xlsx'
+}
 
 async function generateChildrenRemarkXlsx(remark) {
   let DATA;
@@ -1380,7 +1365,7 @@ async function generateChildrenRemarkXlsx(remark) {
       let DATA_ROWS = []
 
       rows.forEach(row => {
-        // console.log(row.date.toUTCString())
+
 
         DATA_ROWS.push([
           { type: String, value: row.fname },
