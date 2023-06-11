@@ -933,10 +933,10 @@ app.get('/child/remarks', (req, res) => {
     "Normal": 0,
     "Overweight": 0,
     "Obese": 0,
-    "Underweight_Percentage": 0,
-    "Normal_Percentage": 0,
-    "Overweight_Percentage": 0,
-    "Obese_Percentage": 0,
+    // "Underweight_Percentage": 0,
+    // "Normal_Percentage": 0,
+    // "Overweight_Percentage": 0,
+    // "Obese_Percentage": 0,
     "total": 0
   }
 
@@ -953,10 +953,10 @@ app.get('/child/remarks', (req, res) => {
         results["total"]++
       })
 
-      results["Underweight_Percentage"] = ((results["Underweight"] / results["total"]) * 100).toFixed(2);
-      results["Normal_Percentage"] = ((results["Normal"] / results["total"]) * 100).toFixed(2)
-      results["Overweight_Percentage"] = ((results["Overweight"] / results["total"]) * 100).toFixed(2)
-      results["Obese_Percentage"] = ((results["Obese"] / results["total"]) * 100).toFixed(2)
+      // results["Underweight_Percentage"] = ((results["Underweight"] / results["total"]) * 100).toFixed(2);
+      // results["Normal_Percentage"] = ((results["Normal"] / results["total"]) * 100).toFixed(2)
+      // results["Overweight_Percentage"] = ((results["Overweight"] / results["total"]) * 100).toFixed(2)
+      // results["Obese_Percentage"] = ((results["Obese"] / results["total"]) * 100).toFixed(2)
 
       res.json(results)
     }
@@ -1039,9 +1039,72 @@ app.get('/child/purok', (req, res) => {
   })
 });
 
-app.get('/testes', async (req, res) => {
-  res.download('report/zip/files.zip')
-})
+// age and remarks graph
+app.get('/child/age/remarks', (req, res) => {
+  // let results = {
+  //   7: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   8: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   9: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   10: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   11: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   12: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   }
+  // }
+
+  let results = {
+    "Underweight": [0, 0, 0, 0, 0, 0],
+    "Normal": [0, 0, 0, 0, 0, 0],
+    "Overweight": [0, 0, 0, 0, 0, 0],
+    "Obese": [0, 0, 0, 0, 0, 0]
+  }
+
+  connection.query(`SELECT
+    DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age, record.remark
+    FROM child 
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    WHERE child.soft_delete = 0 GROUP BY child.id`, (err, rows, fields) => {
+    if (rows) {
+      rows.forEach(item => {
+        results[item.remark][item.age - 7]++
+      })
+
+      res.json(results)
+    }
+    else {
+      res.json({ "message": "No result(s)" })
+    }
+  })
+});
 
 // report generate
 
@@ -1710,6 +1773,8 @@ app.delete('/link/:id', authenticateToken(0), (req, res) => {
 //   key: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/privkey.pem'),
 //   cert: fs.readFileSync('/etc/letsencrypt/live/bocfp.com/fullchain.pem')
 // }, app)
+
+// 
 
 const start = async () => {
   try {
