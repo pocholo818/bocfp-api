@@ -2,10 +2,10 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jun 11, 2023 at 10:38 AM
--- Server version: 10.4.25-MariaDB
--- PHP Version: 8.1.10
+-- Host: localhost
+-- Generation Time: Jun 12, 2023 at 07:30 PM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.0.25
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -34,7 +34,7 @@ CREATE TABLE `announcement` (
   `user_id` int(11) NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   `soft_delete` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `announcement`
@@ -57,7 +57,7 @@ CREATE TABLE `child` (
   `sex` varchar(6) NOT NULL,
   `soft_delete` tinyint(1) NOT NULL DEFAULT 0,
   `image` mediumtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `child`
@@ -107,7 +107,7 @@ CREATE TABLE `guardian` (
   `address` varchar(128) NOT NULL,
   `purok` tinyint(2) NOT NULL DEFAULT 0,
   `soft_delete` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `guardian`
@@ -151,7 +151,7 @@ CREATE TABLE `link` (
   `id` varchar(11) NOT NULL,
   `relationship` varchar(15) NOT NULL,
   `guardian_id` varchar(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `link`
@@ -198,9 +198,9 @@ CREATE TABLE `record` (
   `remark` varchar(15) NOT NULL,
   `output` double NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
-  `soft_delete` tinyint(1) NOT NULL,
+  `soft_delete` tinyint(1) NOT NULL DEFAULT 0,
   `user_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `record`
@@ -221,18 +221,19 @@ INSERT INTO `record` (`record_id`, `id`, `height`, `weight`, `remark`, `output`,
 (13, 11, 128, 23, 'Underweight', 13.97, '2023-06-11 08:36:51', 0, 3),
 (14, 12, 145, 30, 'Underweight', 14.24, '2023-06-11 08:36:51', 0, 1),
 (15, 13, 140, 26, 'Underweight', 13.27, '2023-06-11 08:36:51', 0, 2),
-(16, 14, 121, 35, 'Normal weight', 23.86, '2023-06-11 08:36:51', 0, 1),
+(16, 14, 121, 35, 'Normal', 23.86, '2023-06-11 08:36:51', 0, 1),
 (17, 15, 133, 28, 'Underweight', 15.84, '2023-06-11 08:36:51', 0, 3),
 (18, 16, 127, 22, 'Underweight', 13.59, '2023-06-11 08:36:51', 0, 2),
-(19, 17, 143, 38, 'Normal weight', 18.53, '2023-06-11 08:36:51', 0, 1),
-(20, 18, 138, 32, 'Normal weight', 16.88, '2023-06-11 08:36:51', 0, 3),
+(19, 17, 143, 38, 'Normal', 18.53, '2023-06-11 08:36:51', 0, 1),
+(20, 18, 138, 32, 'Normal', 16.88, '2023-06-11 08:36:51', 0, 3),
 (21, 19, 123, 37, 'Overweight', 24.61, '2023-06-11 08:36:51', 0, 2),
 (22, 20, 136, 21, 'Underweight', 11.35, '2023-06-11 08:36:51', 0, 1),
 (23, 21, 119, 45, 'Obese', 31.777416849092578, '2023-06-11 08:36:51', 0, 2),
 (24, 22, 126, 25, 'Underweight', 15.72, '2023-06-11 08:36:51', 0, 3),
 (25, 23, 144, 29, 'Underweight', 14.94, '2023-06-11 08:36:51', 0, 1),
-(26, 24, 142, 33, 'Normal weight', 16.35, '2023-06-11 08:36:51', 0, 3),
-(27, 25, 139, 27, 'Underweight', 14.05, '2023-06-11 08:36:51', 0, 2);
+(26, 24, 142, 33, 'Normal', 16.35, '2023-06-11 08:36:51', 0, 3),
+(27, 25, 139, 27, 'Underweight', 14.05, '2023-06-11 08:36:51', 0, 2),
+(28, 3, 135, 35, 'Normal', 19.204389574759947, '2023-06-12 17:28:37', 0, 2);
 
 -- --------------------------------------------------------
 
@@ -250,7 +251,7 @@ CREATE TABLE `user` (
   `admin_power` tinyint(1) NOT NULL,
   `soft_delete` tinyint(1) NOT NULL,
   `refresh_token` varchar(256) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user`
@@ -258,7 +259,7 @@ CREATE TABLE `user` (
 
 INSERT INTO `user` (`user_id`, `fname`, `lname`, `username`, `password`, `contact`, `admin_power`, `soft_delete`, `refresh_token`) VALUES
 (1, 'Jenny', 'De Leon', 'admin', '0d3c456672f7646f6403659b91c8987e95ecc7012fd7f77cfa400ce6dd33c789', '09165464984', 1, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ikplbm55IiwiYWRtaW5fcG93ZXIiOjEsImlkIjoxLCJpYXQiOjE2ODU1MzM2MDl9.bmcV3jAcPyR5ZagJ8Y2iZ37zDPDJELJAEEWKA00Cydc'),
-(2, 'March Anthony', 'Sanqui', 'marc01', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', '09453216549', 0, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ik1hcmNoIEFudGhvbnkiLCJhZG1pbl9wb3dlciI6MCwiaWQiOjIsImlhdCI6MTY4NjQ3MTE3NX0.cAz3b1QWmYXltDIZfAZ5TV6wt9yvrC9U2VVHVwCU14Y'),
+(2, 'March Anthony', 'Sanqui', 'marc01', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', '09453216549', 0, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6Ik1hcmNoIEFudGhvbnkiLCJhZG1pbl9wb3dlciI6MCwiaWQiOjIsImlhdCI6MTY4NjU5MDY4MX0.cpwxRFXDKlw_HFJ2RqB6eTTI2cl2cCtAt0N1ipt7gos'),
 (3, 'Lance Elijah', 'Lumacang', 'lance05', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', '09953216546', 1, 0, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbmFtZSI6IkxhbmNlIEVsaWphaCIsImFkbWluX3Bvd2VyIjoxLCJpZCI6MywiaWF0IjoxNjg1ODgxMjAxfQ.AxWPwaTe_JMQM3yMFiiJvL-gIM5hE3jFQvyPb9C3UlA');
 
 --
@@ -334,7 +335,7 @@ ALTER TABLE `link`
 -- AUTO_INCREMENT for table `record`
 --
 ALTER TABLE `record`
-  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `user`

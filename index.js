@@ -1106,6 +1106,87 @@ app.get('/child/age/remarks', (req, res) => {
   })
 });
 
+// age and remarks graph
+app.get('/child/purok/remarks', (req, res) => {
+  let results = {
+    "Underweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Normal": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Overweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Obese": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  }
+  //   let results = {
+
+  //   7: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   8: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   9: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   10: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   11: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   12: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   13 {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   },
+  //   14: {
+  //     "Underweight": 0,
+  //     "Normal": 0,
+  //     "Overweight": 0,
+  //     "Obese": 0
+  //   }
+  // }
+
+  connection.query(`SELECT
+    DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age, record.remark, guardian.purok
+    FROM child 
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    JOIN link ON link.id = child.id
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    WHERE child.soft_delete = 0 GROUP BY child.id`, (err, rows, fields) => {
+    if (rows) {
+      rows.forEach(item => {
+        results[item.remark][item.purok - 1]++
+      })
+
+      res.json(results)
+    }
+    else {
+      res.json({ "message": "No result(s)" })
+    }
+  })
+});
+
 // report generate
 
 // get all children list
