@@ -106,6 +106,7 @@ app.post('/user/login', (req, res) => {
 
       const userInfo = {
         fname: rows[0].fname,
+        lname: rows[0].lname,
         admin_power: rows[0].admin_power,
         id: rows[0].user_id
       }
@@ -123,6 +124,7 @@ app.post('/user/login', (req, res) => {
         refreshToken: refreshToken,
         user_id: rows[0].user_id,
         fname: rows[0].fname,
+        lname: rows[0].lname,
         admin_power: rows[0].admin_power,
       })
     }
