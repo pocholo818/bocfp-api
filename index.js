@@ -1709,10 +1709,12 @@ app.get('/child/data', async (req, res) => {
   }, 1000)
 });
 
+
 // pdf history and specific range
 app.get('/child/report', (req, res) => {
   const childrenRecords = req.query
-  const { from, to, year, filter } = req.query
+  const { from, year, filter } = req.query
+  let { to } = req.query
 
   let results = {
     "Underweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1734,6 +1736,26 @@ app.get('/child/report', (req, res) => {
     // query += `AND   
     //   date >= '${from}' AND
     //   date <= '${to}'`
+    // toMagic = to.split('-')
+    // toMagic[2] = Number(toMagic[2]) + 1
+    // toMagic.toString()
+    // console.log(toMagic)
+
+    // let placeholder = to
+    // placeholder = placeholder.split('-')
+    // placeholder[2] = Number(placeholder[2]) + 1
+
+    // to fix range issues
+    // if(Number(placeholder[2]) < 31) {
+    //   let toMagic = to
+    //   toMagic = toMagic.split('-')
+    //   toMagic[2] = Number(toMagic[2]) + 1
+    //   toMagic[2] = toMagic[2].toString()
+    //   toMagic.toString()
+    //   toMagic.join('-')
+    //   to = toMagic
+    //   console.log(to)
+    // }
     query += `AND date BETWEEN '${from}' AND '${to}'`
   }
   else {
@@ -1761,8 +1783,8 @@ app.get('/child/report', (req, res) => {
     JOIN link ON link.id = child.id
     JOIN guardian ON link.guardian_id = guardian.guardian_id
     WHERE child.soft_delete = 0 `;
-    query += `AND YEAR(date) = ${year} ORDER BY record.date`
-    query += ` GROUP BY month`;
+    query += `AND YEAR(date) = '${year}' ORDER BY record.date`
+    // query += ` GROUP BY month`;
 
 
   }
