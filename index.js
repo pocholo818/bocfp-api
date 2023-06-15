@@ -1043,45 +1043,6 @@ app.get('/child/purok', (req, res) => {
 
 // age and remarks graph
 app.get('/child/age/remarks', (req, res) => {
-  // let results = {
-  //   7: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   8: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   9: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   10: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   11: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   12: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   }
-  // }
-
   let results = {
     "Underweight": [0, 0, 0, 0, 0, 0],
     "Normal": [0, 0, 0, 0, 0, 0],
@@ -1116,57 +1077,6 @@ app.get('/child/purok/remarks', (req, res) => {
     "Overweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     "Obese": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   }
-  //   let results = {
-
-  //   7: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   8: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   9: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   10: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   11: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   12: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   13 {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   },
-  //   14: {
-  //     "Underweight": 0,
-  //     "Normal": 0,
-  //     "Overweight": 0,
-  //     "Obese": 0
-  //   }
-  // }
 
   connection.query(`SELECT
     DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age, record.remark, guardian.purok
@@ -1737,26 +1647,6 @@ app.get('/child/data', async (req, res) => {
     }
   })
 
-  let queryRemarks
-
-  // if date is specified, change query
-  // if (to) {
-  //   // code
-  // }
-  // else if (from) {
-  //   // code
-  // }
-  // else if (to && from) {
-  //   query = `SELECT  child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
-  //     record.height, record.weight, record.remark,record.output, record.date, user.fname AS user_fname, user.lname AS user_lname
-  //     FROM    record 
-  //       JOIN child ON record.id = child.id
-  //       JOIN user ON user.user_id = record.user_id
-  //     WHERE   
-  //       date >= '${from}' AND
-  //       date <= '${to}'`
-  // }
-
   connection.query(`SELECT
     child.fname, child.lname, DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age,
     record.height, record.weight, record.output, record.remark, record.date, record.record_id,
@@ -1819,7 +1709,60 @@ app.get('/child/data', async (req, res) => {
   }, 1000)
 });
 
-// 
+// pdf history and specific range
+app.get('/child/report', (req, res) => {
+  const childrenRecords = req.query
+  const { from, to, year, filter } = req.query
+
+  let results = {
+    "Underweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Normal": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Overweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Obese": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  }
+
+  // if (filter === 'quarterly') {
+  //   results = {
+  //     "Underweight": [0, 0, 0, 0],
+  //     "Normal": [0, 0, 0, 0],
+  //     "Overweight": [0, 0, 0, 0],
+  //     "Obese": [0, 0, 0, 0,],
+  //   }
+  // }
+
+  let query = `SELECT
+    DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age, record.remark, guardian.purok
+    FROM child 
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    JOIN link ON link.id = child.id
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    WHERE child.soft_delete = 0 `
+
+  if (from && to) {
+    // query += `AND   
+    //   date >= '${from}' AND
+    //   date <= '${to}'`
+    query += `AND date BETWEEN '${from}' AND '${to}'`
+  }
+  else {
+    query += `AND YEAR(date) = ${year} ORDER BY record.date`
+  }
+
+  connection.query(query, (err, rows, fields) => {
+    if (rows) {
+      rows.forEach(item => {
+        results[item.remark][item.purok - 1]++
+      })
+
+      res.json(results)
+      console.log(results)
+    }
+    else {
+      res.json({ "message": "No result(s)" })
+    }
+  })
+});
 
 // HARD DELETE
 // delete link
