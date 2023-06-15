@@ -8,6 +8,7 @@
     "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.4",
     "mysql": "^2.18.1",
+    "nodemon": "^2.0.22",
     "write-excel-file": "^1.4.21"
   },
   "name": "bocfp-api",

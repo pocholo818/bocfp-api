@@ -1721,23 +1721,14 @@ app.get('/child/report', (req, res) => {
     "Obese": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   }
 
-  // if (filter === 'quarterly') {
-  //   results = {
-  //     "Underweight": [0, 0, 0, 0],
-  //     "Normal": [0, 0, 0, 0],
-  //     "Overweight": [0, 0, 0, 0],
-  //     "Obese": [0, 0, 0, 0,],
-  //   }
-  // }
-
   let query = `SELECT
-    DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age, record.remark, guardian.purok
-    FROM child 
-    LEFT OUTER JOIN record ON record.id = child.id
-    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
-    JOIN link ON link.id = child.id
-    JOIN guardian ON link.guardian_id = guardian.guardian_id
-    WHERE child.soft_delete = 0 `
+  DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(), child.bdate)), '%Y') + 0 AS age, record.remark, guardian.purok
+  FROM child 
+  LEFT OUTER JOIN record ON record.id = child.id
+  INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+  JOIN link ON link.id = child.id
+  JOIN guardian ON link.guardian_id = guardian.guardian_id
+  WHERE child.soft_delete = 0 `
 
   if (from && to) {
     // query += `AND   
@@ -1749,18 +1740,165 @@ app.get('/child/report', (req, res) => {
     query += `AND YEAR(date) = ${year} ORDER BY record.date`
   }
 
-  connection.query(query, (err, rows, fields) => {
-    if (rows) {
-      rows.forEach(item => {
-        results[item.remark][item.purok - 1]++
-      })
 
-      res.json(results)
-      console.log(results)
+  if (filter === 'monthly') {
+    results = {
+      "Underweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "Normal": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "Overweight": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "Obese": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     }
+
+    query = `SELECT
+    DATE_FORMAT(record.date, '%Y-%m') AS month,
+    record.remark,
+    guardian.purok
+    FROM child
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (
+      SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id
+    ) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    JOIN link ON link.id = child.id
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    WHERE child.soft_delete = 0 `;
+    query += `AND YEAR(date) = ${year} ORDER BY record.date`
+    query += ` GROUP BY month`;
+
+
+  }
+
+
+  if (filter === 'quarterly') {
+    results = {
+      "Underweight": [0, 0, 0, 0],
+      "Normal": [0, 0, 0, 0],
+      "Overweight": [0, 0, 0, 0],
+      "Obese": [0, 0, 0, 0,],
+    }
+
+    query = `SELECT
+    CONCAT(YEAR(record.date), '-Q', QUARTER(record.date)) AS quarter,
+    record.remark,
+    guardian.purok
+    FROM child
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    JOIN link ON link.id = child.id
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    WHERE child.soft_delete = 0 `;
+    query += `AND YEAR(date) = ${year} ORDER BY record.date`
+  }
+
+  if (filter === 'semiAnnually') {
+    results = {
+      "Underweight": [0, 0],
+      "Normal": [0, 0],
+      "Overweight": [0, 0],
+      "Obese": [0, 0],
+    };
+
+    query = `SELECT
+      CONCAT(YEAR(record.date), '-', IF(MONTH(record.date) <= 6, 'H1', 'H2')) AS semi_annual,
+      record.remark,
+      guardian.purok
+      FROM child
+      LEFT OUTER JOIN record ON record.id = child.id
+      INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+      JOIN link ON link.id = child.id
+      JOIN guardian ON link.guardian_id = guardian.guardian_id
+      WHERE child.soft_delete = 0 `;
+    query += `AND YEAR(record.date) = ${year} ORDER BY record.date`
+
+  }
+
+  if (filter === 'annually') {
+    results = {
+      "Underweight": [0],
+      "Normal": [0],
+      "Overweight": [0],
+      "Obese": [0],
+    }
+    query = `SELECT
+    YEAR(record.date) AS year,
+    record.remark,
+    guardian.purok
+    FROM child
+    LEFT OUTER JOIN record ON record.id = child.id
+    INNER JOIN (SELECT MAX(date) AS maxdate, id FROM record WHERE soft_delete = 0 GROUP BY id) r1 ON record.id = r1.id AND record.date = r1.maxdate
+    JOIN link ON link.id = child.id
+    JOIN guardian ON link.guardian_id = guardian.guardian_id
+    WHERE child.soft_delete = 0 `;
+    query += `AND YEAR(date) = ${year} ORDER BY record.date`
+
+  }
+
+
+
+  connection.query(query, (err, rows, fields) => {
+    if (filter === 'monthly') {
+      if (rows) {
+        rows.forEach(item => {
+          const monthIndex = parseInt(item.month.split('-')[1]) - 1;
+          results[item.remark][monthIndex] += 1;
+        });
+        console.log(results);
+        res.json(results);
+      } else {
+        res.json({ "message": err });
+      }
+    }
+
+    else if (filter === 'quarterly') {
+      if (rows) {
+        rows.forEach(item => {
+          const quarter = item.quarter.split('-Q')[1] - 1;
+          results[item.remark][quarter]++;
+        });
+
+        res.json(results);
+      } else {
+        res.json({ "message": err });
+      }
+    }
+    else if (filter === 'semiAnnually') {
+      if (rows) {
+        rows.forEach(item => {
+          const semiAnnual = item.semi_annual.split('-')[1] === 'H1' ? 0 : 1;
+          results[item.remark][semiAnnual]++;
+        });
+
+        res.json(results);
+      } else {
+        res.json({ "message": err });
+      }
+    }
+    else if (filter === 'annually') {
+      if (rows) {
+        rows.forEach(item => {
+          results[item.remark][0]++;
+        });
+
+        res.json(results);
+      } else {
+        res.json({ "message": err });
+      }
+    }
+
+
     else {
-      res.json({ "message": "No result(s)" })
+      if (rows) {
+        rows.forEach(item => {
+          results[item.remark][item.purok - 1]++
+        })
+        console.log(results)
+
+        res.json(results)
+      }
+      else {
+        res.json({ "message": err })
+      }
     }
+
   })
 });
 
